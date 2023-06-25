@@ -8,10 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Entypo } from '@expo/vector-icons';
-import { EvilIcons } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
-
+import { EvilIcons, AntDesign, Entypo } from '@expo/vector-icons';
 import axiosConfig from '../helpers/axiosConfig';
 import { format } from 'date-fns';
 import { Modalize } from 'react-native-modalize';
