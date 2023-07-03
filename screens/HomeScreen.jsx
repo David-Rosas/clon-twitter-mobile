@@ -1,157 +1,139 @@
-import React from "react";
-import { EvilIcons, Ionicons, AntDesign } from "@expo/vector-icons";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
   View,
   Text,
-  Button,
+  StyleSheet,
   FlatList,
   Image,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 
-const DATA = [
-  {
-    id: 1,
-    title: "One title",
-  },
-  {
-    id: 2,
-    title: "Two title",
-  },
-  {
-    id: 3,
-    title: "three title",
-  },
-  {
-    id: 4,
-    title: "Fourth title",
-  },
-  {
-    id: 5,
-    title: "Five title",
-  },
-  {
-    id: 6,
-    title: "Six title",
-  },
-  {
-    id: 7,
-    title: "Seven title",
-  },
-  {
-    id: 8,
-    title: "Eight title",
-  },
-  {
-    id: 9,
-    title: "Nine title",
-  },
-];
+import { EvilIcons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 
-export default function HomeScreen({ navigation }) {
-  const gotoProfile = () => {
-    navigation.navigate("Profile Screen");
-  };
+import axiosConfig from "../helpers/axiosConfig";
+import { formatDistanceToNowStrict } from "date-fns";
+import locale from "date-fns/locale/en-US";
+import formatDistance from "../helpers/formatDistanceCustom";
 
-  const gotoSingleTweet = () => {
-    navigation.navigate("Tweet Screen");
-  };
- 
-  const gotoNewTweet = () => {
+import RenderItem from "../components/RenderItem";
+import { AuthContext } from "../context/AuthProvider";
+
+export default function HomeScreen({ route, navigation }) {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const flatListRef = useRef();
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    getAllTweets();
+  }, [page]);
+
+  useEffect(() => {
+    if (route.params?.newTweetAdded || route.params?.tweetDeleted) {
+      getAllTweetsRefresh();
+      flatListRef.current.scrollToOffset({
+        offset: 0,
+      });
+    }
+  }, [route.params?.newTweetAdded, route.params?.tweetDeleted]);
+
+  function getAllTweetsRefresh() {
+    setPage(1);
+    setIsAtEndOfScrolling(false);
+    setIsRefreshing(false);
+
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${user.token}`;
+
+    axiosConfig
+      .get(`/tweets`)
+      .then((response) => {
+        setData(response.data.data);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function getAllTweets() {
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${user.token}`;
+
+    axiosConfig
+      .get(`/tweets?page=${page}`)
+      .then((response) => {
+        // console.log(response.data);
+        if (page === 1) {
+          setData(response.data.data);
+        } else {
+          setData([...data, ...response.data.data]);
+        }
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function handleRefresh() {
+    setPage(1);
+    setIsAtEndOfScrolling(false);
+    setIsRefreshing(true);
+    getAllTweets();
+  }
+
+  function handleEnd() {
+    setPage(page + 1);
+  }
+
+  function gotoNewTweet() {
     navigation.navigate("New Tweet");
   }
 
-  const renderItem = ({ item }) => (
-    <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={gotoProfile}>
-        <Image
-          style={styles.avatar}
-          source={{ uri: "https://reactnative.dev/img/tiny_logo.png" }}
-        />
-      </TouchableOpacity>
-      <View style={{ flex: 1 }}>
-        <TouchableOpacity style={styles.flexRow} onPress={() => gotoProfile()}>
-          <Text numberOfLines={1} style={styles.tweetName}>
-            {item.title}
-          </Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            @DeivixRock
-          </Text>
-          <Text>&middot;</Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            9m
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tweetContentContainer}
-          onPress={() => gotoSingleTweet()}
-        >
-          <Text style={styles.tweetContent}>
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry's.
-          </Text>
-        </TouchableOpacity>
-        <View style={styles.tweetEngagement}>
-          <TouchableOpacity style={styles.flexRow}>
-            <EvilIcons
-              name="comment"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>456</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="retweet"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>32</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="heart"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>456</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <Ionicons
-              name="md-stats-chart"
-              size={16}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>1000</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name={Platform.OS == "ios" ? "share-apple" : "share-google"}
-              size={22}
-              color="gray"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
-      <FlatList
-        data={DATA}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={styles.tweetSeparator}></View>
-        )}
-      />
+      {isLoading ? (
+        <ActivityIndicator style={{ marginTop: 8 }} size="large" color="gray" />
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={data}
+          renderItem={(props) => <RenderItem {...props} />}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => (
+            <View style={styles.tweetSeparator}></View>
+          )}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
+        />
+      )}
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => gotoNewTweet()}
@@ -161,53 +143,15 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  styleButton: {
-    backgroundColor: "transparent",
-  },
   container: {
     flex: 1,
     backgroundColor: "white",
   },
-  flexRow: {
-    flexDirection: "row",
-  },
-  tweetContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
   tweetSeparator: {
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    marginRight: 8,
-    borderRadius: 21,
-  },
-  tweetName: {
-    fontWeight: "bold",
-    color: "#222222",
-  },
-  tweetHandle: {
-    marginHorizontal: 8,
-    color: "gray",
-  },
-  tweetContentContainer: {
-    marginTop: 4,
-  },
-  tweetContent: {
-    lineHeight: 18,
-  },
-  textGray: {
-    color: "gray",
-  },
-  tweetEngagement: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
   },
   floatingButton: {
     width: 60,
@@ -219,8 +163,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 12,
-  },
-  ml4: {
-    marginLeft: 16,
   },
 });
