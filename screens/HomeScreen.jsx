@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,18 +8,18 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
-} from "react-native";
+} from 'react-native';
 
-import { EvilIcons } from "@expo/vector-icons";
-import { AntDesign } from "@expo/vector-icons";
+import { EvilIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 
-import axiosConfig from "../helpers/axiosConfig";
-import { formatDistanceToNowStrict } from "date-fns";
-import locale from "date-fns/locale/en-US";
-import formatDistance from "../helpers/formatDistanceCustom";
+import axiosConfig from '../helpers/axiosConfig';
+import { formatDistanceToNowStrict } from 'date-fns';
+import locale from 'date-fns/locale/en-US';
+import formatDistance from '../helpers/formatDistanceCustom';
 
-import RenderItem from "../components/RenderItem";
-import { AuthContext } from "../context/AuthProvider";
+import RenderItem from '../components/RenderItem';
+import { AuthContext } from '../context/AuthProvider';
 
 export default function HomeScreen({ route, navigation }) {
   const [data, setData] = useState([]);
@@ -49,17 +49,17 @@ export default function HomeScreen({ route, navigation }) {
     setIsRefreshing(false);
 
     axiosConfig.defaults.headers.common[
-      "Authorization"
+      'Authorization'
     ] = `Bearer ${user.token}`;
 
     axiosConfig
       .get(`/tweets`)
-      .then((response) => {
+      .then(response => {
         setData(response.data.data);
         setIsLoading(false);
         setIsRefreshing(false);
       })
-      .catch((error) => {
+      .catch(error => {
         console.log(error);
         setIsLoading(false);
         setIsRefreshing(false);
@@ -68,12 +68,12 @@ export default function HomeScreen({ route, navigation }) {
 
   function getAllTweets() {
     axiosConfig.defaults.headers.common[
-      "Authorization"
+      'Authorization'
     ] = `Bearer ${user.token}`;
 
     axiosConfig
       .get(`/tweets?page=${page}`)
-      .then((response) => {
+      .then(response => {
         // console.log(response.data);
         if (page === 1) {
           setData(response.data.data);
@@ -88,7 +88,7 @@ export default function HomeScreen({ route, navigation }) {
         setIsLoading(false);
         setIsRefreshing(false);
       })
-      .catch((error) => {
+      .catch(error => {
         console.log(error);
         setIsLoading(false);
         setIsRefreshing(false);
@@ -107,7 +107,7 @@ export default function HomeScreen({ route, navigation }) {
   }
 
   function gotoNewTweet() {
-    navigation.navigate("New Tweet");
+    navigation.navigate('New Tweet');
   }
 
   return (
@@ -118,8 +118,8 @@ export default function HomeScreen({ route, navigation }) {
         <FlatList
           ref={flatListRef}
           data={data}
-          renderItem={(props) => <RenderItem {...props} />}
-          keyExtractor={(item) => item.id.toString()}
+          renderItem={props => <RenderItem {...props} />}
+          keyExtractor={item => item.id.toString()}
           ItemSeparatorComponent={() => (
             <View style={styles.tweetSeparator}></View>
           )}
@@ -147,20 +147,20 @@ export default function HomeScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: 'white',
   },
   tweetSeparator: {
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: '#e5e7eb',
   },
   floatingButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1d9bf1",
-    position: "absolute",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1d9bf1',
+    position: 'absolute',
     bottom: 20,
     right: 12,
   },
